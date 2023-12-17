@@ -1,0 +1,82 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// admin.model.prisma
+
+model Admin {
+  id        String   @id @default(nanoid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  username  String   @unique
+  email     String   @unique
+  password  String
+  role      String   @default("viewer")
+  // Add other admin details as needed
+
+  // Relationship with Teacher
+  teachers Teacher[]
+}
+
+// teacher.model.prisma
+
+model Teacher {
+  id        String   @id @default(nanoid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  firstName String
+  lastName  String
+  email     String   @unique
+  verified  Boolean  @default(false)
+  // Add other teacher details as needed
+
+  // Relationship with Admin
+  adminId String
+  admin   Admin  @relation(fields: [adminId], references: [id])
+
+  // Relationship with Course
+  courses Course[]
+}
+
+// student.model.prisma
+
+model Student {
+  id        String   @id @default(nanoid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  firstName String
+  lastName  String
+  email     String   @unique
+  // Add other student details as needed
+
+  // Relationship with Course
+  enrolledCourses Course[]
+}
+
+// course.model.prisma
+
+model Course {
+  id        String   @id @default(nanoid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  title     String
+  type      String // e.g., Beginner, Intermediate, Advanced
+  limit     Int // Max number of participants allowed in the course
+  view      String // Added field for course view
+  // Add other course details as needed
+
+  // Relationship with Teacher
+  teacherId String
+  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  // Relationship with Student
+  participants Student[]
+}
