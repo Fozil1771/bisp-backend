@@ -16,11 +16,13 @@ model Admin {
   id        String   @id @default(nanoid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  username  String   @unique
+  username  String?  @unique
   email     String   @unique
-  password  String
   role      String   @default("viewer")
+  verified  Boolean  @default(false)
   // Add other admin details as needed
+
+  tokens Token[]
 
   // Relationship with Teacher
   teachers Teacher[]
@@ -32,15 +34,20 @@ model Teacher {
   id        String   @id @default(nanoid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  firstName String
-  lastName  String
+  username  String?  @unique
+  firstName String?
+  lastName  String?
   email     String   @unique
   verified  Boolean  @default(false)
+
+  verifiedTeacher Boolean @default(false)
   // Add other teacher details as needed
 
   // Relationship with Admin
-  adminId String
-  admin   Admin  @relation(fields: [adminId], references: [id])
+  adminId String?
+  admin   Admin?  @relation(fields: [adminId], references: [id])
+
+  tokens Token[]
 
   // Relationship with Course
   courses Course[]
@@ -52,13 +59,38 @@ model Student {
   id        String   @id @default(nanoid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  firstName String
-  lastName  String
+  username  String?  @unique
+  firstName String?
+  lastName  String?
   email     String   @unique
+  verfied   Boolean  @default(false)
   // Add other student details as needed
+
+  tokens Token[]
 
   // Relationship with Course
   enrolledCourses Course[]
+}
+
+model Token {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  type       String // EMAIL|API
+  emailToken String? @unique
+
+  valid      Boolean  @default(true)
+  expiration DateTime
+
+  adminId String?
+  admin   Admin?  @relation(fields: [adminId], references: [id])
+
+  teacherId String?
+  teacher   Teacher? @relation(fields: [teacherId], references: [id])
+
+  studentId String?
+  student   Student? @relation(fields: [studentId], references: [id])
 }
 
 // course.model.prisma
@@ -70,7 +102,7 @@ model Course {
   title     String
   type      String // e.g., Beginner, Intermediate, Advanced
   limit     Int // Max number of participants allowed in the course
-  view      String // Added field for course view
+  view      String   @default("basic") // Added field for course view
   // Add other course details as needed
 
   // Relationship with Teacher

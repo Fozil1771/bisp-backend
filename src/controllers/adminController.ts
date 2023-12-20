@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient();
 
@@ -48,13 +48,12 @@ const getAllAdmins = async (req: Request, res: Response) => {
 // create
 
 const createAdmin = async (req: Request, res: Response) => {
-  const { username, email, password } = req.body;
+  const { username, email } = req.body;
   try {
     const admin = await prisma.admin.create({
       data: {
         username,
-        email,
-        password
+        email
       }
     });
 
@@ -67,7 +66,7 @@ const createAdmin = async (req: Request, res: Response) => {
 
 // delete admin
 
-const deleteById = async (req: Request, res: Response) => {
+const deleteById = async (req: Request, res: Response, next: NextFunction) => {
   const { id } = req.params;
 
   await prisma.admin.delete({
@@ -76,6 +75,7 @@ const deleteById = async (req: Request, res: Response) => {
     }
   });
   res.status(200);
+  next();
 }
 
 // verify teacher
@@ -85,7 +85,7 @@ const verifyTeacher = async (req: Request, res: Response) => {
   try {
     const updatedTeacher = await prisma.teacher.update({
       where: { id: teacherId },
-      data: { verified: true },
+      data: { verifiedTeacher: true },
     });
 
     res.status(200).json({ message: 'Teacher verified successfully', teacher: updatedTeacher });

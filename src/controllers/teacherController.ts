@@ -38,15 +38,15 @@ const getTeachers = async (req: Request, res: Response) => {
 // create teacher
 
 const createTeacher = async (req: Request, res: Response) => {
-  const { firstName, lastName, email, adminId } = req.body;
+  const { username, firstName, lastName, email } = req.body;
 
   try {
     const createdTeacher = await prisma.teacher.create({
       data: {
+        username,
         firstName,
         lastName,
-        email,
-        admin: { connect: { id: adminId } },
+        email
       },
     });
 

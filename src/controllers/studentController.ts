@@ -1,14 +1,18 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient();
 
 const createStudent = async (req: Request, res: Response) => {
-  const { firstName, lastName, email } = req.body;
+  const { username, firstName, lastName, email, password } = req.body;
+  const hashedPassword = await bcrypt.hash(password, 10);
 
   try {
     const createdStudent = await prisma.student.create({
       data: {
+        username,
         firstName,
         lastName,
         email,
@@ -61,9 +65,24 @@ const enrollToCourse = async (req: Request, res: Response) => {
   }
 }
 
+const deleteById = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    await prisma.student.delete({
+      where: {
+        id: id
+      }
+    });
+    res.status(200).json({ message: "Data deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 
 export {
   createStudent,
   getStudents,
-  enrollToCourse
+  enrollToCourse,
+  deleteById
 }
