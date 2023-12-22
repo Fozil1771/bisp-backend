@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
-
+import bcrypt from 'bcrypt'
 const prisma = new PrismaClient();
 
 
@@ -38,7 +38,8 @@ const getTeachers = async (req: Request, res: Response) => {
 // create teacher
 
 const createTeacher = async (req: Request, res: Response) => {
-  const { username, firstName, lastName, email } = req.body;
+  const { username, firstName, lastName, email, password } = req.body;
+  const hashedPassword = await bcrypt.hash(password, 10);
 
   try {
     const createdTeacher = await prisma.teacher.create({
@@ -46,7 +47,8 @@ const createTeacher = async (req: Request, res: Response) => {
         username,
         firstName,
         lastName,
-        email
+        email,
+        password: hashedPassword
       },
     });
 

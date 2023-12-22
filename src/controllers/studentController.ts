@@ -16,6 +16,7 @@ const createStudent = async (req: Request, res: Response) => {
         firstName,
         lastName,
         email,
+        password: hashedPassword
       },
     });
 

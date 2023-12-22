@@ -1,28 +1,38 @@
-import express, { Request as ExpressRequest, Response, NextFunction } from 'express';
-import { verifyTeacher, getAllAdmins, createAdmin, getAdminById, deleteById } from '../controllers/adminController';
+import express, { Request as ExpressRequest, Response, NextFunction, Request } from 'express';
+import { verifyTeacher, getAllAdmins, createAdmin, getAdminById, deleteById, verifyAdmin } from '../controllers/adminController';
 import { authenticateToken } from '../auth'
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt'
+import { Session } from 'express-session';
 
 const EMAIL_TOKEN_EXPIRATION_MINUTES = 10;
 const AUTHENTICATION_EXPIRATION_HOURS = 12;
 const JWT_SECRET = process.env.JWT_SECRET || 'SUPER SECRET';
+
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
 
 
-router.get('/:id', authenticateToken, getAdminById);
+router.get('/:id', getAdminById);
 
 router.get('/', getAllAdmins);
 
 router.post('/', createAdmin);
 
-router.delete('/:id', deleteById)
+router.delete('/:id', deleteById);
 
+
+router.post('/verify/:adminId/:tokenId', verifyAdmin);
 
 router.post('/verify-teacher/:teacherId', verifyTeacher);
+
+
+
+
+
 
 
 // Generate a random 8 digit number as the email token
@@ -39,43 +49,101 @@ function generateAuthToken(tokenId: number): string {
   });
 }
 
+interface RequestWitSession extends Request {
+  session: any;
+  // Add other custom properties as needed
+}
 
-router.post('/login', async (req, res) => {
-  const { email } = req.body;
 
-  // generate token
-  const emailToken = generateEmailToken();
-  const expiration = new Date(
-    new Date().getTime() + EMAIL_TOKEN_EXPIRATION_MINUTES * 60 * 1000
-  );
+router.post('/login', async (req: RequestWitSession, res, next) => {
+  const { email, password } = req.body;
 
   try {
-    const createdToken = await prisma.token.create({
-      data: {
-        type: 'EMAIL',
-        emailToken,
-        expiration,
-        admin: {
-          connectOrCreate: {
-            where: { email },
-            create: {
-              email
-            },
-          },
-        },
-      },
-    });
 
-    console.log(createdToken);
-    // TODO send emailToken to user's email
-    // await sendEmailToken(email, emailToken);
-    res.sendStatus(200);
-  } catch (e) {
-    console.log(e);
+    let user = await prisma.admin.findUniqueOrThrow({
+      where: {
+        email
+      }
+    })
+
+    console.log(user)
+
+    if (!user) {
+      // User not found
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    if (!user.verified) {
+      return res.status(401).json({ error: 'Unverified' });
+    }
+
+    // Compare passwords
+    const passwordMatch = await bcrypt.compare(password, user.password);
+
+    if (passwordMatch) {
+      // Passwords match, send user data
+      req.session.user = user;
+      return res.status(200).json(user);
+
+    } else {
+      // Passwords do not match
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+
+  } catch (error) {
     res
       .status(400)
       .json({ error: "Couldn't start the authentication process" });
   }
+
+
+
+  // generate token
+  // const emailToken = generateEmailToken();
+  // const expiration = new Date(
+  //   new Date().getTime() + EMAIL_TOKEN_EXPIRATION_MINUTES * 60 * 1000
+  // );
+
+  //try {
+  //   const createdToken = await prisma.token.create({
+  //     data: {
+  //       emailToken,
+  //       expiration,
+  //       admin: {
+  //         connectOrCreate: {
+  //           where: { email },
+  //           create: {
+  //             email,
+  //             password
+  //           },
+  //         },
+  //       },
+  //     },
+  //   });
+
+  //   console.log(createdToken);
+  // TODO send emailToken to user's email
+  // await sendEmailToken(email, emailToken);
+  //   res.sendStatus(200);
+  // } catch (e) {
+  //   console.log(e);
+  //   res
+  //     .status(400)
+  //     .json({ error: "Couldn't start the authentication process" });
+  // }
+});
+
+router.post('/logout', (req, res) => {
+  // Clear the session
+  req.session.destroy((err) => {
+    if (err) {
+      console.error(err);
+      res.sendStatus(500);
+    } else {
+      res.sendStatus(200);
+    }
+  });
 });
 
 // Validate the emailToken
@@ -114,7 +182,6 @@ router.post('/authenticate', async (req, res) => {
   );
   const apiToken = await prisma.token.create({
     data: {
-      type: 'API',
       expiration,
       admin: {
         connect: {

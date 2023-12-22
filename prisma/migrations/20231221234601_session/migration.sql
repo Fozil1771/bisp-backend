@@ -1,0 +1,1 @@
+CREATE INDEX "IDX_session_expire" ON "Session" ("expire");
