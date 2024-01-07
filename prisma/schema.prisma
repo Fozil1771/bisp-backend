@@ -20,10 +20,21 @@ model Session {
 // user.model.prisma
 
 model User {
-  id          String  @id @default(nanoid())
-  displayName String?
-  email       String? @unique
-  userType    String
+  id        String   @id @default(nanoid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  username  String?  @unique
+  email     String   @unique
+  password  String
+  type      Type
+
+  tokens Token[]
+}
+
+enum Type {
+  ADMIN
+  TEACHER
+  STUDENT
 }
 
 // admin.model.prisma
@@ -39,7 +50,6 @@ model Admin {
   verified  Boolean  @default(false)
   // Add other admin details as needed
 
-  tokens Token[]
 
   // Relationship with Teacher
   teachers Teacher[]
@@ -65,8 +75,6 @@ model Teacher {
   adminId String?
   admin   Admin?  @relation(fields: [adminId], references: [id])
 
-  tokens Token[]
-
   // Relationship with Course
   courses Course[]
 }
@@ -85,8 +93,6 @@ model Student {
   verfied   Boolean  @default(false)
   // Add other student details as needed
 
-  tokens Token[]
-
   // Relationship with Course
   enrolledCourses Course[]
 }
@@ -101,14 +107,17 @@ model Token {
   valid      Boolean  @default(true)
   expiration DateTime
 
-  adminId String?
-  admin   Admin?  @relation(fields: [adminId], references: [id])
+  userId String?
+  user   User?  @relation(fields: [userId], references: [id])
 
-  teacherId String?
-  teacher   Teacher? @relation(fields: [teacherId], references: [id])
+  // adminId String?
+  // admin   Admin?  @relation(fields: [adminId], references: [id])
 
-  studentId String?
-  student   Student? @relation(fields: [studentId], references: [id])
+  // teacherId String?
+  // teacher   Teacher? @relation(fields: [teacherId], references: [id])
+
+  // studentId String?
+  // student   Student? @relation(fields: [studentId], references: [id])
 }
 
 // course.model.prisma

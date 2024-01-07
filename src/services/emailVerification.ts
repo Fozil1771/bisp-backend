@@ -34,7 +34,7 @@ export const emailVerification = async (user: any, token: Token) => {
 		to: user.email,
 		subject: "Account verification",
 		text: "Verify your account by clicking to the link",
-		html: `<p>Verify by clicking to</p> <a href="http://localhost:3003/verify/${user.id}/${token.id}">Sign up</a>`
+		html: `<p>Verify by clicking to</p> <a href="http://localhost:3003/api/${user.type.toLowerCase()}/verify/${user.id}/${token.id}">Sign up</a>`
 	}
 
 	const info = await transporter.sendMail(message);

@@ -1,76 +1,30 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import { Admin, PrismaClient, Student, Teacher } from '@prisma/client';
+import jwt, { VerifyErrors, Secret } from 'jsonwebtoken';
+import { AuthenticatedRequest } from '../types';
+import { PrismaClient } from '@prisma/client';
 
 const JWT_SECRET = process.env.SECRET_KEY || 'SUPER SECRET';
-
 const prisma = new PrismaClient();
 
-type AuthRequest = Request & { teacher?: Teacher };
 
-export async function authenticateToken(
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction
-) {
+export const authenticateToken = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+ 
   // Authentication
-  const authHeader = req.headers['authorization'];
-  const jwtToken = authHeader?.split(' ')[1];
+  const token: string | undefined = req.headers.authorization?.split(' ')[1];
 
-  // console.log(req.headers)
-
-  // console.log(authHeader)
-  // console.log(jwtToken)
-  if (!jwtToken) {
-    return res.sendStatus(401);
+  if (!token) {
+    return res.sendStatus(401); // Unauthorized
   }
 
-  // decode the jwt token
-  try {
-
-
-    const payload = (await jwt.verify(jwtToken, JWT_SECRET)) as {
-      tokenId: number;
-    };
-
-    console.log("payload", payload);
-
-    const dbToken = await prisma.token.findUnique({
-      where: { id: payload.tokenId },
-      include: { teacher: true },
-    });
-
-    if (!dbToken?.valid || dbToken.expiration < new Date()) {
-      return res.status(401).json({ error: 'API token expired' });
+  jwt.verify(token, 'your-secret-key', (err: VerifyErrors | null, user: any) => {
+    if (err) {
+      return res.sendStatus(403); // Forbidden
     }
 
-    // let user: Admin | Teacher | Student | null = null;
+    const { id, username } = user;
+    
 
-    // if (payload.adminId) {
-    //   user = await prisma.admin.findUnique({
-    //     where: { id: payload.adminId },
-    //   });
-    // } else if (payload.teacherId) {
-    //   user = await prisma.teacher.findUnique({
-    //     where: { id: payload.teacherId },
-    //   });
-    // } else if (payload.studentId) {
-    //   user = await prisma.student.findUnique({
-    //     where: { id: payload.studentId },
-    //   });
-    // }
-
-    // if (!user) {
-    //   return res.sendStatus(401);
-    // }
-
-    req.teacher = dbToken.teacher || undefined;
-
-    console.log("req.teacher: ", req.teacher)
-    console.log(dbToken)
-  } catch (e) {
-    return res.sendStatus(401);
-  }
-
-  next();
+    req.user = user;
+    next();
+  });
 }

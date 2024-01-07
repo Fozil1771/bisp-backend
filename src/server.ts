@@ -3,12 +3,14 @@ import session, { Session } from 'express-session';
 import PgSession from 'connect-pg-simple';
 import { Pool } from 'pg';
 import cors from 'cors'
-
+import jwt from 'jsonwebtoken'
 
 import adminRoutes from './routes/adminRoutes';
 import teacherRoutes from './routes/teacherRoutes';
 import studentRoutes from './routes/studentRoutes';
 import courseRoutes from './routes/courseRoutes';
+import { authenticateToken } from './auth';
+import { AuthenticatedRequest } from './types';
 
 
 const app = express();
@@ -50,12 +52,11 @@ interface UserSession extends Session {
 	// Add other custom properties as needed
 }
 
-app.get('/home', (req: Request, res: Response) => {
-	const user = (req.session as UserSession).user;
+app.get('/home', authenticateToken, (req: AuthenticatedRequest, res: Response) => {
+  const user = req.user;
 	console.log(user);
-	res.send(`Hello world!! % ${user?.username}`)
-
-
+	res.send(user)
+	
 })
 
 // Start the server

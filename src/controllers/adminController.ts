@@ -1,12 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client'
-import bcrypt from 'bcrypt'
-import { emailVerification } from '../services/emailVerification';
 const prisma = new PrismaClient();
 
-const EMAIL_TOKEN_EXPIRATION_MINUTES = 10;
-const AUTHENTICATION_EXPIRATION_HOURS = 12;
-const JWT_SECRET = process.env.JWT_SECRET || 'SUPER SECRET';
 interface RequestWitSession extends Request {
   session: any;
   // Add other custom properties as needed
@@ -48,7 +43,8 @@ const getAdminById = async (req: RequestWitSession, res: Response) => {
 // get all
 const getAllAdmins = async (req: Request, res: Response) => {
   try {
-    const allAdmins = await prisma.admin.findMany({});
+
+    const allAdmins = await prisma.admin.findMany();
 
 
     res.json(allAdmins);
@@ -59,36 +55,7 @@ const getAllAdmins = async (req: Request, res: Response) => {
 
 // create
 
-const createAdmin = async (req: Request, res: Response) => {
-  const { username, email, password } = req.body;
-  const hashedPassword = await bcrypt.hash(password, 10);
 
-  try {
-    const admin = await prisma.admin.create({
-      data: {
-        username,
-        email,
-        password: hashedPassword
-      }
-    });
-
-    const expiration = new Date(
-      new Date().getTime() + AUTHENTICATION_EXPIRATION_HOURS * 60 * 60 * 1000
-    );
-
-    const token = await prisma.token.create({
-      data: {
-        expiration,
-        adminId: admin.id
-      }
-    })
-
-    emailVerification(admin, token);
-    res.status(200).json(admin);
-  } catch (error) {
-    res.status(404).json({ error: error });
-  }
-}
 
 
 // delete admin
@@ -101,6 +68,12 @@ const deleteById = async (req: Request, res: Response, next: NextFunction) => {
       id: id
     }
   });
+
+  // await prisma.token.deleteMany({
+  //   where: {
+  //     userId: id
+  //   }
+  // })
   res.status(200);
   next();
 }
@@ -112,7 +85,10 @@ const verifyAdmin = async (req: Request, res: Response) => {
   const adminId = req.params.adminId;
   const tokenId = req.params.tokenId;
 
-  const admin = await prisma.admin.findUniqueOrThrow({
+  console.log(adminId, tokenId)
+  console.log("verified")
+
+  const admin = await prisma.user.findUniqueOrThrow({
     where: {
       id: adminId
     }
@@ -128,7 +104,7 @@ const verifyAdmin = async (req: Request, res: Response) => {
     return res.status(404).json({ error: 'Data not found' });
   }
 
-  if (token.adminId !== admin.id) {
+  if (token.userId !== admin.id) {
     return res.status(401).json({ error: 'Invalid token for the admin' });
   }
 
@@ -147,7 +123,7 @@ const verifyAdmin = async (req: Request, res: Response) => {
   })
 
   res.status(200).json({ message: 'Verification successful' });
-  res.redirect('/home')
+  // res.redirect('/home')
   console.log(admin)
 }
 
@@ -173,7 +149,6 @@ export {
   verifyAdmin,
   verifyTeacher,
   getAllAdmins,
-  createAdmin,
   getAdminById,
   deleteById,
 }
