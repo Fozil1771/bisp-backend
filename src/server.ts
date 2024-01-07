@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import session, { Session } from 'express-session';
 import PgSession from 'connect-pg-simple';
 import { Pool } from 'pg';
+import cors from 'cors'
 
 
 import adminRoutes from './routes/adminRoutes';
@@ -21,6 +22,7 @@ const sessionStore = new (PgSession(session))({
 	tableName: 'Session'
 });
 
+app.use(cors())
 
 app.use(
 	session({

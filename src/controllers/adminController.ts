@@ -147,6 +147,8 @@ const verifyAdmin = async (req: Request, res: Response) => {
   })
 
   res.status(200).json({ message: 'Verification successful' });
+  res.redirect('/home')
+  console.log(admin)
 }
 
 

@@ -2,7 +2,7 @@ import express, { Request as ExpressRequest, Response, NextFunction, Request } f
 import { verifyTeacher, getAllAdmins, createAdmin, getAdminById, deleteById, verifyAdmin } from '../controllers/adminController';
 import { authenticateToken } from '../auth'
 import { PrismaClient } from '@prisma/client';
-import jwt from 'jsonwebtoken';
+import jwt, { sign } from 'jsonwebtoken';
 import bcrypt from 'bcrypt'
 import { Session } from 'express-session';
 
@@ -80,10 +80,20 @@ router.post('/login', async (req: RequestWitSession, res, next) => {
     // Compare passwords
     const passwordMatch = await bcrypt.compare(password, user.password);
 
+    const token = sign({ userId: user.id }, 'your-secret-key', {
+      expiresIn: '1d', // Adjust the expiration time as needed
+    });
+
     if (passwordMatch) {
       // Passwords match, send user data
-      req.session.user = user;
-      return res.status(200).json(user);
+      req.session.user = {user, token};
+
+      res.setHeader(
+        'Set-Cookie',
+        `token=${token}; HttpOnly; Path=/; Max-Age=${60 * 60 * 24}; SameSite=None; Secure`
+      );
+
+      return res.status(200).json(req.session.user);
 
     } else {
       // Passwords do not match
