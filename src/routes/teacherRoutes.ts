@@ -1,11 +1,12 @@
 import express, { Request, Response, NextFunction } from 'express';
 
-import { createTeacher, getTeachers, deleteTeacherById, getTeacherById, getEnrolledParticipants } from '../controllers/teacherController';
+import { getTeachers, deleteTeacherById, getTeacherById, getEnrolledParticipants, verifyTeacher } from '../controllers/teacherController';
 
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken } from '../auth';
 import jwt, { sign } from 'jsonwebtoken';
 import bcrypt from 'bcrypt'
+import { createUser } from '../controllers/createUser';
 
 const EMAIL_TOKEN_EXPIRATION_MINUTES = 10;
 const AUTHENTICATION_EXPIRATION_HOURS = 12;
@@ -18,8 +19,20 @@ router.get('/:id', getTeacherById);
 router.get('/', getTeachers);
 router.get('/:courseId/enrolled-participants', getEnrolledParticipants);
 
-router.post('/', createTeacher);
+router.post('/', async (req, res) => {
+  try {
+    const userType: string = "TEACHER"
+    const createdUser = await createUser(req.body, userType);
+    res.status(201).send(createdUser);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal server error');
+  }
+});
 router.delete('/:id', deleteTeacherById);
+
+router.post('/verify/:userId/:tokenId', verifyTeacher);
+
 
 
 // Generate a random 8 digit number as the email token
@@ -73,7 +86,7 @@ router.post('/login', async (req: RequestWitSession, res, next) => {
 
     if (passwordMatch) {
       // Passwords match, send user data
-      req.session.user = {user, token};
+      req.session.user = { user, token };
 
       res.setHeader(
         'Set-Cookie',

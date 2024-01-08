@@ -1,5 +1,5 @@
 import express, { Request as ExpressRequest, Response, NextFunction, Request } from 'express';
-import { verifyTeacher, getAllAdmins, getAdminById, deleteById, verifyAdmin } from '../controllers/adminController';
+import { verifiedTeacherByAdmin, getAllAdmins, getAdminById, deleteById, verifyAdmin } from '../controllers/adminController';
 import { authenticateToken } from '../auth'
 import { PrismaClient } from '@prisma/client';
 import jwt, { sign } from 'jsonwebtoken';
@@ -35,9 +35,9 @@ router.post('/', async (req, res) => {
 router.delete('/:id', deleteById);
 
 
-router.post('/verify/:adminId/:tokenId', verifyAdmin);
+router.post('/verify/:userId/:tokenId', verifyAdmin);
 
-router.post('/verify-teacher/:teacherId', verifyTeacher);
+router.post('/verify-teacher/:teacherId', verifiedTeacherByAdmin);
 
 
 

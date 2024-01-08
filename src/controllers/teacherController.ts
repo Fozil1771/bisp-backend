@@ -37,27 +37,27 @@ const getTeachers = async (req: Request, res: Response) => {
 
 // create teacher
 
-const createTeacher = async (req: Request, res: Response) => {
-  const { username, firstName, lastName, email, password } = req.body;
-  const hashedPassword = await bcrypt.hash(password, 10);
+// const createTeacher = async (req: Request, res: Response) => {
+//   const { username, firstName, lastName, email, password } = req.body;
+//   const hashedPassword = await bcrypt.hash(password, 10);
 
-  try {
-    const createdTeacher = await prisma.teacher.create({
-      data: {
-        username,
-        firstName,
-        lastName,
-        email,
-        password: hashedPassword
-      },
-    });
+//   try {
+//     const createdTeacher = await prisma.teacher.create({
+//       data: {
+//         username,
+//         firstName,
+//         lastName,
+//         email,
+//         password: hashedPassword
+//       },
+//     });
 
-    res.status(201).json({ message: 'Teacher created successfully', teacher: createdTeacher });
-  } catch (error) {
-    console.error('Error creating teacher:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
+//     res.status(201).json({ message: 'Teacher created successfully', teacher: createdTeacher });
+//   } catch (error) {
+//     console.error('Error creating teacher:', error);
+//     res.status(500).json({ error: 'Internal server error' });
+//   }
+// };
 
 // Delete
 
@@ -96,11 +96,59 @@ const getEnrolledParticipants = async (req: Request, res: Response) => {
   }
 }
 
+const verifyTeacher = async (req: Request, res: Response) => {
+  const teacherId = req.params.userId;
+  const tokenId = req.params.tokenId;
+
+  console.log(req.params)
+
+  console.log(teacherId, tokenId)
+  console.log("verified")
+
+  const teacher = await prisma.user.findUniqueOrThrow({
+    where: {
+      id: teacherId
+    }
+  });
+
+  const token = await prisma.token.findUniqueOrThrow({
+    where: {
+      id: Number(tokenId)
+    }
+  });
+
+  if (!teacher || !token) {
+    return res.status(404).json({ error: 'Data not found' });
+  }
+
+  if (token.userId !== teacher.id) {
+    return res.status(401).json({ error: 'Invalid token for the admin' });
+  }
+
+  if (!token.valid || token.expiration < new Date()) {
+    return res.status(401).json({ error: 'Token expired' });
+  }
+
+  await prisma.teacher.update({
+    where: { id: teacher.id },
+    data: { verified: true }
+  });
+
+  await prisma.token.update({
+    where: { id: token.id },
+    data: { valid: false }
+  })
+
+  res.status(200).json({ message: 'Verification successful' });
+  // res.redirect('/home')
+  console.log(teacher)
+}
+
 
 export {
-  createTeacher,
   getTeachers,
   deleteTeacherById,
   getTeacherById,
-  getEnrolledParticipants
+  getEnrolledParticipants,
+  verifyTeacher
 }

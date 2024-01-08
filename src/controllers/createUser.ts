@@ -12,7 +12,7 @@ const expiration = new Date(
 );
 
 const createUser = async (userData: any, userType: any) => {
-  const { username, email, password } = userData;
+  const { username, firstName, lastName, email, password } = userData;
   const hashedPassword = await bcrypt.hash(password, 10);
   
   const checkUserInDb = await prisma.user.findFirst({
@@ -61,6 +61,8 @@ const createUser = async (userData: any, userType: any) => {
         data: {
           id: user.id,
           username,
+          firstName,
+          lastName,
           email,
           password: hashedPassword
         }

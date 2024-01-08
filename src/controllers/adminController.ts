@@ -82,15 +82,15 @@ const deleteById = async (req: Request, res: Response, next: NextFunction) => {
 // verify admin itself
 
 const verifyAdmin = async (req: Request, res: Response) => {
-  const adminId = req.params.adminId;
+  const userId = req.params.userId;
   const tokenId = req.params.tokenId;
 
-  console.log(adminId, tokenId)
+  console.log(userId, tokenId)
   console.log("verified")
 
   const admin = await prisma.user.findUniqueOrThrow({
     where: {
-      id: adminId
+      id: userId
     }
   });
 
@@ -129,7 +129,7 @@ const verifyAdmin = async (req: Request, res: Response) => {
 
 
 // verify teacher
-const verifyTeacher = async (req: Request, res: Response) => {
+const verifiedTeacherByAdmin = async (req: Request, res: Response) => {
   const { teacherId } = req.params;
 
   try {
@@ -147,7 +147,7 @@ const verifyTeacher = async (req: Request, res: Response) => {
 
 export {
   verifyAdmin,
-  verifyTeacher,
+  verifiedTeacherByAdmin,
   getAllAdmins,
   getAdminById,
   deleteById,
