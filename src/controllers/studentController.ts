@@ -5,27 +5,27 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient();
 
-const createStudent = async (req: Request, res: Response) => {
-  const { username, firstName, lastName, email, password } = req.body;
-  const hashedPassword = await bcrypt.hash(password, 10);
+// const createStudent = async (req: Request, res: Response) => {
+//   const { username, firstName, lastName, email, password } = req.body;
+//   const hashedPassword = await bcrypt.hash(password, 10);
 
-  try {
-    const createdStudent = await prisma.student.create({
-      data: {
-        username,
-        firstName,
-        lastName,
-        email,
-        password: hashedPassword
-      },
-    });
+//   try {
+//     const createdStudent = await prisma.student.create({
+//       data: {
+//         username,
+//         firstName,
+//         lastName,
+//         email,
+//         password: hashedPassword
+//       },
+//     });
 
-    res.status(201).json({ message: 'Student created successfully', student: createdStudent });
-  } catch (error) {
-    console.error('Error creating student:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
+//     res.status(201).json({ message: 'Student created successfully', student: createdStudent });
+//   } catch (error) {
+//     console.error('Error creating student:', error);
+//     res.status(500).json({ error: 'Internal server error' });
+//   }
+// };
 
 const getStudents = async (req: Request, res: Response) => {
   try {
@@ -38,33 +38,33 @@ const getStudents = async (req: Request, res: Response) => {
 };
 
 
-// Enroll to the course
+// // Enroll to the course
 
-const enrollToCourse = async (req: Request, res: Response) => {
-  const { studentId, courseId } = req.params;
+// const enrollToCourse = async (req: Request, res: Response) => {
+//   const { studentId, courseId } = req.params;
 
-  try {
-    // Check if the student and course exist
-    const studentExists = await prisma.student.findUnique({ where: { id: studentId } });
-    const courseExists = await prisma.course.findUnique({ where: { id: courseId } });
+//   try {
+//     // Check if the student and course exist
+//     const studentExists = await prisma.student.findUnique({ where: { id: studentId } });
+//     const courseExists = await prisma.course.findUnique({ where: { id: courseId } });
 
-    if (!studentExists || !courseExists) {
-      return res.status(404).json({ error: 'Student or course not found' });
-    }
+//     if (!studentExists || !courseExists) {
+//       return res.status(404).json({ error: 'Student or course not found' });
+//     }
 
-    // Enroll the student in the course
-    const enrolledStudent = await prisma.course.update({
-      where: { id: courseId },
-      data: { participants: { connect: { id: studentId } } },
-      include: { participants: true }, // Include the updated list of participants in the response
-    });
+//     // Enroll the student in the course
+//     const enrolledStudent = await prisma.course.update({
+//       where: { id: courseId },
+//       data: { participants: { connect: { id: studentId } } },
+//       include: { participants: true }, // Include the updated list of participants in the response
+//     });
 
-    res.status(200).json({ message: 'Student enrolled successfully', enrolledStudent });
-  } catch (error) {
-    console.error('Error enrolling student:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-}
+//     res.status(200).json({ message: 'Student enrolled successfully', enrolledStudent });
+//   } catch (error) {
+//     console.error('Error enrolling student:', error);
+//     res.status(500).json({ error: 'Internal server error' });
+//   }
+// }
 
 const deleteById = async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -80,10 +80,54 @@ const deleteById = async (req: Request, res: Response) => {
   }
 };
 
+const verifyStudent = async (req: Request, res: Response) => {
+  const userId = req.params.userId;
+  const tokenId = req.params.tokenId;
+
+  console.log(userId, tokenId)
+  console.log("verified")
+
+  const student = await prisma.user.findUniqueOrThrow({
+    where: {
+      id: userId
+    }
+  });
+
+  const token = await prisma.token.findUniqueOrThrow({
+    where: {
+      id: Number(tokenId)
+    }
+  });
+
+  if (!student || !token) {
+    return res.status(404).json({ error: 'Data not found' });
+  }
+
+  if (token.userId !== student.id) {
+    return res.status(401).json({ error: 'Invalid token for the student' });
+  }
+
+  if (!token.valid || token.expiration < new Date()) {
+    return res.status(401).json({ error: 'Token expired' });
+  }
+
+  await prisma.student.update({
+    where: { id: student.id },
+    data: { verified: true }
+  });
+
+  await prisma.token.update({
+    where: { id: token.id },
+    data: { valid: false }
+  })
+
+  res.status(200).json({ message: 'Verification successful' });
+  console.log(student)
+}
+
 
 export {
-  createStudent,
   getStudents,
-  enrollToCourse,
-  deleteById
+  deleteById,
+  verifyStudent
 }

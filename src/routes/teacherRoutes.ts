@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 
-import { getTeachers, deleteTeacherById, getTeacherById, getEnrolledParticipants, verifyTeacher } from '../controllers/teacherController';
+import { getTeachers, deleteTeacherById, getTeacherById, getEnrolledParticipants, getAllCourses, verifyTeacher } from '../controllers/teacherController';
 
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken } from '../auth';
@@ -17,7 +17,10 @@ const prisma = new PrismaClient();
 
 router.get('/:id', getTeacherById);
 router.get('/', getTeachers);
-router.get('/:courseId/enrolled-participants', getEnrolledParticipants);
+// router.get('/:courseId/enrolled-participants', getEnrolledParticipants);
+
+router.get('/:teacherId/enrolled-participants', getEnrolledParticipants);
+router.get('/:teacherId/courses', getAllCourses);
 
 router.post('/', async (req, res) => {
   try {
@@ -56,13 +59,14 @@ interface RequestWitSession extends Request {
 
 
 router.post('/login', async (req: RequestWitSession, res, next) => {
-  const { email, password } = req.body;
+  const { username, email, password } = req.body;
 
   try {
 
     let user = await prisma.teacher.findUniqueOrThrow({
       where: {
-        email
+        email,
+        username
       }
     })
 
@@ -107,6 +111,19 @@ router.post('/login', async (req: RequestWitSession, res, next) => {
       .json({ error: "Couldn't start the authentication process" });
   }
 });
+
+router.post('/logout', (req, res) => {
+  // Clear the session
+  req.session.destroy((err) => {
+    if (err) {
+      console.error(err);
+      res.sendStatus(500);
+    } else {
+      res.sendStatus(200);
+    }
+  });
+});
+
 
 // Validate the emailToken
 // Generate a long-lived JWT token

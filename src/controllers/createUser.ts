@@ -91,6 +91,7 @@ const createUser = async (userData: any, userType: any) => {
     }
   })
 
+  
   emailVerification(user, token);
 
 }

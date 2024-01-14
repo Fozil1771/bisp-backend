@@ -79,19 +79,42 @@ const deleteTeacherById = async (req: Request, res: Response) => {
 // Get enrolled participants
 
 const getEnrolledParticipants = async (req: Request, res: Response) => {
-  const { courseId } = req.params;
+  const { teacherId } = req.params;
 
   try {
-    const enrolledParticipants = await prisma.course
-      .findUnique({
-        where: { id: courseId },
-        include: { participants: true },
-      })
-      .then((course) => course?.participants || []);
+    // Find all courses for the teacher
+    const courses = await prisma.course.findMany({
+      where: {
+        teacherId: teacherId,
+      },
+      include: {
+        participants: true,
+      },
+    });
 
-    res.status(200).json({ enrolledParticipants });
+    // Extract participants from all courses
+    const allEnrolledParticipants = courses.flatMap((course) => course.participants || []);
+
+    res.status(200).json(allEnrolledParticipants);
   } catch (error) {
     console.error('Error getting enrolled participants:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+
+const getAllCourses = async (req: Request, res: Response) => {
+  const { teacherId } = req.params;
+
+  try {
+    const courses = await prisma.course.findMany({
+      where: {
+        teacherId: teacherId
+      }
+    });
+    res.status(200).json(courses);
+  } catch (error) {
+    console.error('Error fetching teachers:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 }
@@ -150,5 +173,6 @@ export {
   deleteTeacherById,
   getTeacherById,
   getEnrolledParticipants,
+  getAllCourses,
   verifyTeacher
 }

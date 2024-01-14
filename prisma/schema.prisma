@@ -24,6 +24,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   username  String?  @unique
+  imageUrl  String?
   email     String   @unique
   password  String
   type      Type
@@ -44,12 +45,12 @@ model Admin {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   username  String?  @unique
+  imageUrl  String?
   email     String   @unique
   password  String
   role      String   @default("viewer")
   verified  Boolean  @default(false)
   // Add other admin details as needed
-
 
   // Relationship with Teacher
   teachers Teacher[]
@@ -62,8 +63,10 @@ model Teacher {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   username  String?  @unique
+  imageUrl  String?
   firstName String?
   lastName  String?
+  bio       String?
   email     String   @unique
   password  String
   verified  Boolean  @default(false)
@@ -86,15 +89,19 @@ model Student {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   username  String?  @unique
+  imageUrl  String?
   firstName String?
   lastName  String?
   email     String   @unique
   password  String
-  verfied   Boolean  @default(false)
+  verified  Boolean  @default(false)
   // Add other student details as needed
 
   // Relationship with Course
   enrolledCourses Course[]
+
+  progress StudentProgress[]
+  Chapter  Chapter[]
 }
 
 model Token {
@@ -108,16 +115,7 @@ model Token {
   expiration DateTime
 
   userId String?
-  user   User?  @relation(fields: [userId], references: [id])
-
-  // adminId String?
-  // admin   Admin?  @relation(fields: [adminId], references: [id])
-
-  // teacherId String?
-  // teacher   Teacher? @relation(fields: [teacherId], references: [id])
-
-  // studentId String?
-  // student   Student? @relation(fields: [studentId], references: [id])
+  user   User?   @relation(fields: [userId], references: [id])
 }
 
 // course.model.prisma
@@ -127,15 +125,67 @@ model Course {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   title     String
+  banner    String?
   type      String // e.g., Beginner, Intermediate, Advanced
   limit     Int // Max number of participants allowed in the course
   view      String   @default("basic") // Added field for course view
+  price     Int
   // Add other course details as needed
 
   // Relationship with Teacher
   teacherId String
   teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
 
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  chapters Chapter[]
+
   // Relationship with Student
   participants Student[]
+}
+
+model Category {
+  id      String   @id @default(uuid())
+  name    String   @unique
+  courses Course[]
+}
+
+model Chapter {
+  id          String  @id @default(uuid())
+  title       String
+  description String?
+  videoUrl    String?
+  position    Int
+  isPublished Boolean @default(false)
+  isFree      Boolean @default(false)
+
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  studentProgress StudentProgress[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Student   Student? @relation(fields: [studentId], references: [id])
+  studentId String?
+
+  @@index([courseId])
+}
+
+model StudentProgress {
+  id        String @id @default(uuid())
+  studentId String
+
+  chapterId String
+  chapter   Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  isCompleted Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Student   Student  @relation(fields: [studentId], references: [id])
+
+  @@unique([studentId, chapterId])
+  @@index([chapterId])
 }
