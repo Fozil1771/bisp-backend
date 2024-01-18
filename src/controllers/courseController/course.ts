@@ -71,7 +71,8 @@ const getCourseById = async (req: Request, res: Response) => {
         id: id
       },
       include: {
-        teacher: true
+        chapters: true,
+        participants: true
       }
     });
 

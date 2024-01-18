@@ -3,7 +3,7 @@ import session, { Session } from 'express-session';
 import PgSession from 'connect-pg-simple';
 import { Pool } from 'pg';
 import cors from 'cors'
-import jwt from 'jsonwebtoken'
+import morgan from 'morgan';
 
 import adminRoutes from './routes/adminRoutes';
 import teacherRoutes from './routes/teacherRoutes';
@@ -40,6 +40,9 @@ app.use(
 app.use(express.json());
 
 
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms')
+)
+
 
 // Routes
 app.use("/api/admin", adminRoutes);
@@ -53,10 +56,10 @@ interface UserSession extends Session {
 }
 
 app.get('/home', authenticateToken, (req: AuthenticatedRequest, res: Response) => {
-  const user = req.user;
+	const user = req.user;
 	console.log(user);
 	res.send(user)
-	
+
 })
 
 // Start the server

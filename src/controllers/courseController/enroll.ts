@@ -2,6 +2,29 @@ import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
+
+
+const enrolledCourses = async (req: Request, res: Response) => {
+  const { studentId } = req.params;
+
+  try {
+    const courses = await prisma.course.findMany({
+      where: {
+        participants: {
+          some: {
+            id: studentId
+          }
+        }
+      }
+    });
+
+    res.status(200).json(courses);
+  } catch (error) {
+    console.log("error", error)
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 const enrollToCourse = async (req: Request, res: Response) => {
   const { studentId, courseId } = req.params;
 
@@ -59,6 +82,7 @@ const unEnrollFromCourse = async (req: Request, res: Response) => {
 }
 
 export {
+  enrolledCourses,
   enrollToCourse,
   unEnrollFromCourse
 }

@@ -119,6 +119,32 @@ const getAllCourses = async (req: Request, res: Response) => {
   }
 }
 
+const updateTeacher = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { username, firstName, lastName, bio } = req.body;
+
+  try {
+    // const hashedPassword = await bcrypt.hash(password, 10);
+
+    const updatedTeacher = await prisma.teacher.update({
+      where: {
+        id: id
+      },
+      data: {
+        username,
+        firstName,
+        lastName,
+        bio
+      }
+    })
+
+    res.status(200).json({ message: 'Teacher updated successfully', teacher: updatedTeacher });
+  }catch(error) {
+    console.error('Error creating teacher:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 const verifyTeacher = async (req: Request, res: Response) => {
   const teacherId = req.params.userId;
   const tokenId = req.params.tokenId;
@@ -163,7 +189,7 @@ const verifyTeacher = async (req: Request, res: Response) => {
   })
 
   res.status(200).json({ message: 'Verification successful' });
-  // res.redirect('/home')
+  res.redirect('/login')
   console.log(teacher)
 }
 
@@ -174,5 +200,6 @@ export {
   getTeacherById,
   getEnrolledParticipants,
   getAllCourses,
-  verifyTeacher
+  verifyTeacher,
+  updateTeacher
 }

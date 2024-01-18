@@ -1,7 +1,7 @@
 import express from 'express';
 import { getStudents, deleteById, verifyStudent } from '../controllers/studentController';
 import { createUser } from '../controllers/createUser';
-import { enrollToCourse, unEnrollFromCourse } from '../controllers/courseController/enroll';
+import { enrollToCourse, unEnrollFromCourse, enrolledCourses } from '../controllers/courseController/enroll';
 
 
 const router = express.Router();
@@ -23,7 +23,7 @@ router.delete('/:id', deleteById)
 
 router.post('/verify/:userId/:tokenId', verifyStudent);
 
-
+router.get('/:studentId/enrolled-courses', enrolledCourses);
 router.post('/:studentId/enroll/:courseId', enrollToCourse);
 router.post('/:studentId/unenroll/:courseId', unEnrollFromCourse);
 

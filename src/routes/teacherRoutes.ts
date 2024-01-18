@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 
-import { getTeachers, deleteTeacherById, getTeacherById, getEnrolledParticipants, getAllCourses, verifyTeacher } from '../controllers/teacherController';
+import { getTeachers, deleteTeacherById, updateTeacher, getTeacherById, getEnrolledParticipants, getAllCourses, verifyTeacher } from '../controllers/teacherController';
 
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken } from '../auth';
@@ -34,7 +34,9 @@ router.post('/', async (req, res) => {
 });
 router.delete('/:id', deleteTeacherById);
 
-router.post('/verify/:userId/:tokenId', verifyTeacher);
+router.get('/verify/:userId/:tokenId', verifyTeacher);
+
+router.put('/update/:id', updateTeacher);
 
 
 
