@@ -5,7 +5,7 @@ import { PrismaClient } from '@prisma/client';
 
 
 export const authenticateToken = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
- 
+
   // Authentication
   const token: string | undefined = req.headers.authorization?.split(' ')[1];
 
@@ -15,6 +15,8 @@ export const authenticateToken = async (req: AuthenticatedRequest, res: Response
 
   jwt.verify(token, 'your-secret-key', (err: VerifyErrors | null, user: any) => {
     if (err) {
+      console.log(token)
+      console.log(err)
       return res.sendStatus(403); // Forbidden
     }
 

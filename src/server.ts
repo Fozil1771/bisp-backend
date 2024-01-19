@@ -4,6 +4,8 @@ import PgSession from 'connect-pg-simple';
 import { Pool } from 'pg';
 import cors from 'cors'
 import morgan from 'morgan';
+import path from 'path';
+import * as fs from 'fs';
 
 import adminRoutes from './routes/adminRoutes';
 import teacherRoutes from './routes/teacherRoutes';
@@ -11,6 +13,7 @@ import studentRoutes from './routes/studentRoutes';
 import courseRoutes from './routes/courseRoutes';
 import { authenticateToken } from './auth';
 import { AuthenticatedRequest } from './types';
+
 
 
 const app = express();
@@ -36,12 +39,14 @@ app.use(
 	})
 );
 
+var accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' })
+
+app.use(morgan(':remote-addr - :remote-user ":method :url HTTP/:http-version" :status :res[content-length] - :response-time ms ":referrer" ":user-agent"', { stream: accessLogStream }))
+
 // Middleware for JSON parsing
 app.use(express.json());
 
 
-app.use(morgan(':method :url :status :res[content-length] - :response-time ms')
-)
 
 
 // Routes

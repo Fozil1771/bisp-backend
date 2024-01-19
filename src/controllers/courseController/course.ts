@@ -3,20 +3,32 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 
+const getCourseList = async (req: Request, res: Response) => {
+  try {
+    const courses = await prisma.course.findMany();
+    console.log(courses)
+    res.status(200).json(courses);
+  } catch (error) {
+    console.error('Error getting courses:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 const createCourse = async (req: Request, res: Response) => {
-  const { title, banner, type, limit, view, price, teacherId, categoryId } = req.body;
+  const { title, description, banner, type, limit, view, price, teacherId, categoryName } = req.body;
 
   try {
     const course = await prisma.course.create({
       data: {
         title,
+        description,
         banner,
         type,
         limit,
         view,
         price,
         teacherId,
-        categoryId
+        categoryName
       },
       include: {
         teacher: true,
@@ -55,14 +67,14 @@ const updateCourse = async (req: Request, res: Response) => {
       }
     });
 
-    res.status(200).json({ message: 'Course updated successfully', course: updatedCourse });
+    res.sendStatus(200).json({ message: 'Course updated successfully', course: updatedCourse });
   } catch (error) {
     console.error('Error updating course:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 }
 
-const getCourseById = async (req: Request, res: Response) => {
+const getCoursePublicById = async (req: Request, res: Response) => {
   const { id } = req.params;
 
   try {
@@ -72,11 +84,31 @@ const getCourseById = async (req: Request, res: Response) => {
       },
       include: {
         chapters: true,
-        participants: true
       }
     });
 
-    res.json(course);
+    res.status(200).json(course);
+  } catch (error) {
+    res.status(404).json({ error: "No data found" })
+  }
+}
+
+const getCourseById = async (req: Request, res: Response) => {
+  const { teacherId, id } = req.params;
+  console.log(id)
+  try {
+    const course = await prisma.course.findUniqueOrThrow({
+      where: {
+        id: id,
+        teacherId: teacherId
+      },
+      include: {
+        chapters: true,
+        participants: true
+      }
+    });
+    console.log("by id protected: ", course)
+    res.status(200).json(course);
   } catch (error) {
     res.send(404).json({ error: "No data found" })
   }
@@ -99,6 +131,8 @@ const deleteCourseById = async (req: Request, res: Response) => {
 
 
 export {
+  getCourseList,
+  getCoursePublicById,
   createCourse,
   updateCourse,
   getCourseById,

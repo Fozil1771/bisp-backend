@@ -5,28 +5,6 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient();
 
-// const createStudent = async (req: Request, res: Response) => {
-//   const { username, firstName, lastName, email, password } = req.body;
-//   const hashedPassword = await bcrypt.hash(password, 10);
-
-//   try {
-//     const createdStudent = await prisma.student.create({
-//       data: {
-//         username,
-//         firstName,
-//         lastName,
-//         email,
-//         password: hashedPassword
-//       },
-//     });
-
-//     res.status(201).json({ message: 'Student created successfully', student: createdStudent });
-//   } catch (error) {
-//     console.error('Error creating student:', error);
-//     res.status(500).json({ error: 'Internal server error' });
-//   }
-// };
-
 const getStudents = async (req: Request, res: Response) => {
   try {
     const students = await prisma.student.findMany();

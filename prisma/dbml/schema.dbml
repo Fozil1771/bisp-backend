@@ -1,0 +1,160 @@
+//// ------------------------------------------------------
+//// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+//// ------------------------------------------------------
+
+Table Session {
+  sid String [pk]
+  sess Json [not null]
+  expire DateTime [not null]
+}
+
+Table User {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  username String [unique]
+  imageUrl String
+  email String [unique, not null]
+  password String [not null]
+  type Type [not null]
+  tokens Token [not null]
+}
+
+Table Admin {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  username String [unique]
+  imageUrl String
+  email String [unique, not null]
+  password String [not null]
+  role String [not null, default: 'viewer']
+  verified Boolean [not null, default: false]
+  teachers Teacher [not null]
+}
+
+Table Teacher {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  username String [unique]
+  imageUrl String
+  firstName String
+  lastName String
+  bio String
+  email String [unique, not null]
+  password String [not null]
+  verified Boolean [not null, default: false]
+  verifiedTeacher Boolean [not null, default: false]
+  adminId String
+  admin Admin
+  courses Course [not null]
+}
+
+Table Student {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  username String [unique]
+  imageUrl String
+  firstName String
+  lastName String
+  email String [unique, not null]
+  password String [not null]
+  verified Boolean [not null, default: false]
+  enrolledCourses Course [not null]
+  progress StudentProgress [not null]
+  Chapter Chapter [not null]
+}
+
+Table Token {
+  id Int [pk, increment]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  emailToken String [unique]
+  valid Boolean [not null, default: true]
+  expiration DateTime [not null]
+  userId String
+  user User
+}
+
+Table Course {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  title String [not null]
+  description String
+  banner String
+  type String [not null]
+  limit Int [not null]
+  view String [not null, default: 'basic']
+  price Int [not null]
+  isPublished Boolean [not null, default: false]
+  isFeatured Boolean [not null, default: false]
+  teacherId String [not null]
+  teacher Teacher [not null]
+  categoryName String
+  category Category
+  chapters Chapter [not null]
+  participants Student [not null]
+}
+
+Table Category {
+  id String [pk]
+  name String [unique, not null]
+  courses Course [not null]
+}
+
+Table Chapter {
+  id String [pk]
+  title String [not null]
+  description Json
+  videoUrl String
+  position Int [not null]
+  isPublished Boolean [not null, default: false]
+  isFree Boolean [not null, default: false]
+  courseId String [not null]
+  course Course [not null]
+  studentProgress StudentProgress [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  Student Student
+  studentId String
+}
+
+Table StudentProgress {
+  id String [pk]
+  studentId String [not null]
+  chapterId String [not null]
+  chapter Chapter [not null]
+  isCompleted Boolean [not null, default: false]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  Student Student [not null]
+
+  indexes {
+    (studentId, chapterId) [unique]
+  }
+}
+
+Enum Type {
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
+Ref: Teacher.adminId > Admin.id
+
+Ref: Token.userId > User.id
+
+Ref: Course.teacherId > Teacher.id [delete: Cascade]
+
+Ref: Course.categoryName > Category.name
+
+Ref: Chapter.courseId > Course.id [delete: Cascade]
+
+Ref: Chapter.studentId > Student.id
+
+Ref: StudentProgress.chapterId > Chapter.id [delete: Cascade]
+
+Ref: StudentProgress.studentId > Student.id

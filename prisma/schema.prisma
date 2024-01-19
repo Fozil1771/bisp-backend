@@ -5,6 +5,10 @@ generator client {
   provider = "prisma-client-js"
 }
 
+generator dbml {
+  provider = "prisma-dbml-generator"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -121,23 +125,26 @@ model Token {
 // course.model.prisma
 
 model Course {
-  id        String   @id @default(nanoid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  title     String
-  banner    String?
-  type      String // e.g., Beginner, Intermediate, Advanced
-  limit     Int // Max number of participants allowed in the course
-  view      String   @default("basic") // Added field for course view
-  price     Int
+  id          String   @id @default(nanoid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  title       String
+  description String?
+  banner      String?
+  type        String // e.g., Beginner, Intermediate, Advanced
+  limit       Int // Max number of participants allowed in the course
+  view        String   @default("basic") // Added field for course view
+  price       Int
   // Add other course details as needed
+  isPublished Boolean  @default(false)
 
+  isFeatured Boolean @default(false)
   // Relationship with Teacher
-  teacherId String
-  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  teacherId  String
+  teacher    Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
 
-  categoryId String?
-  category   Category? @relation(fields: [categoryId], references: [id])
+  categoryName String?
+  category     Category? @relation(fields: [categoryName], references: [name])
 
   chapters Chapter[]
 
@@ -154,7 +161,7 @@ model Category {
 model Chapter {
   id          String  @id @default(uuid())
   title       String
-  description String?
+  description Json?
   videoUrl    String?
   position    Int
   isPublished Boolean @default(false)
