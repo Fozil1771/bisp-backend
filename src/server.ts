@@ -64,8 +64,8 @@ app.get('/home', authenticateToken, (req: AuthenticatedRequest, res: Response) =
 	const user = req.user;
 	console.log(user);
 	res.send(user)
-
 })
+
 
 // Start the server
 app.listen(PORT, () => {

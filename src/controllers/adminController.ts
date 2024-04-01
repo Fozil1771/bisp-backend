@@ -131,11 +131,17 @@ const verifyAdmin = async (req: Request, res: Response) => {
 // verify teacher
 const verifiedTeacherByAdmin = async (req: Request, res: Response) => {
   const { teacherId } = req.params;
+  const { adminId, isVerified } = req.body;
+
 
   try {
+
     const updatedTeacher = await prisma.teacher.update({
       where: { id: teacherId },
-      data: { verifiedTeacher: true },
+      include: {
+        admin: true
+      },
+      data: { verifiedTeacher: isVerified, adminId: adminId },
     });
 
     res.status(200).json({ message: 'Teacher verified successfully', teacher: updatedTeacher });

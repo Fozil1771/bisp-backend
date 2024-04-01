@@ -4,67 +4,67 @@
 
 Table Session {
   sid String [pk]
-  sess Json [not null]
   expire DateTime [not null]
+  sess Json [not null]
 }
 
 Table User {
+  email String [unique, not null]
   id String [pk]
   createdAt DateTime [default: `now()`, not null]
+  password String [not null]
+  type Type [not null]
   updatedAt DateTime [not null]
   username String [unique]
   imageUrl String
-  email String [unique, not null]
-  password String [not null]
-  type Type [not null]
   tokens Token [not null]
 }
 
 Table Admin {
-  id String [pk]
   createdAt DateTime [default: `now()`, not null]
+  email String [unique, not null]
+  id String [pk]
+  role String [not null, default: 'viewer']
   updatedAt DateTime [not null]
   username String [unique]
-  imageUrl String
-  email String [unique, not null]
-  password String [not null]
-  role String [not null, default: 'viewer']
   verified Boolean [not null, default: false]
+  password String [not null]
+  imageUrl String
   teachers Teacher [not null]
 }
 
 Table Teacher {
-  id String [pk]
-  createdAt DateTime [default: `now()`, not null]
-  updatedAt DateTime [not null]
-  username String [unique]
-  imageUrl String
   firstName String
   lastName String
-  bio String
-  email String [unique, not null]
-  password String [not null]
   verified Boolean [not null, default: false]
-  verifiedTeacher Boolean [not null, default: false]
   adminId String
-  admin Admin
+  createdAt DateTime [default: `now()`, not null]
+  email String [unique, not null]
+  id String [pk]
+  updatedAt DateTime [not null]
+  username String [unique]
+  verifiedTeacher Boolean [not null, default: false]
+  password String [not null]
+  imageUrl String
+  bio String
   courses Course [not null]
+  admin Admin
 }
 
 Table Student {
-  id String [pk]
-  createdAt DateTime [default: `now()`, not null]
-  updatedAt DateTime [not null]
-  username String [unique]
-  imageUrl String
   firstName String
   lastName String
+  createdAt DateTime [default: `now()`, not null]
   email String [unique, not null]
+  id String [pk]
+  updatedAt DateTime [not null]
+  username String [unique]
   password String [not null]
+  imageUrl String
   verified Boolean [not null, default: false]
-  enrolledCourses Course [not null]
-  progress StudentProgress [not null]
   Chapter Chapter [not null]
+  progress StudentProgress [not null]
+  enrolledCourses Course [not null]
 }
 
 Table Token {
@@ -80,22 +80,22 @@ Table Token {
 
 Table Course {
   id String [pk]
-  createdAt DateTime [default: `now()`, not null]
-  updatedAt DateTime [not null]
   title String [not null]
-  description String
-  banner String
   type String [not null]
   limit Int [not null]
   view String [not null, default: 'basic']
-  price Int [not null]
-  isPublished Boolean [not null, default: false]
-  isFeatured Boolean [not null, default: false]
   teacherId String [not null]
-  teacher Teacher [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  banner String
+  price Int [not null]
   categoryName String
-  category Category
+  isFeatured Boolean [not null, default: false]
+  isPublished Boolean [not null, default: false]
+  description String
   chapters Chapter [not null]
+  category Category
+  teacher Teacher [not null]
   participants Student [not null]
 }
 
@@ -108,28 +108,28 @@ Table Category {
 Table Chapter {
   id String [pk]
   title String [not null]
-  description Json
   videoUrl String
   position Int [not null]
   isPublished Boolean [not null, default: false]
   isFree Boolean [not null, default: false]
   courseId String [not null]
-  course Course [not null]
-  studentProgress StudentProgress [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
-  Student Student
   studentId String
+  description Json
+  course Course [not null]
+  Student Student
+  studentProgress StudentProgress [not null]
 }
 
 Table StudentProgress {
   id String [pk]
   studentId String [not null]
   chapterId String [not null]
-  chapter Chapter [not null]
   isCompleted Boolean [not null, default: false]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
+  chapter Chapter [not null]
   Student Student [not null]
 
   indexes {
@@ -147,9 +147,9 @@ Ref: Teacher.adminId > Admin.id
 
 Ref: Token.userId > User.id
 
-Ref: Course.teacherId > Teacher.id [delete: Cascade]
-
 Ref: Course.categoryName > Category.name
+
+Ref: Course.teacherId > Teacher.id [delete: Cascade]
 
 Ref: Chapter.courseId > Course.id [delete: Cascade]
 

@@ -84,6 +84,12 @@ const getCoursePublicById = async (req: Request, res: Response) => {
       },
       include: {
         chapters: true,
+        participants: {
+          select: {
+            id: true,
+            username: true
+          }
+        }
       }
     });
 

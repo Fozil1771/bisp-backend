@@ -1,155 +1,111 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
-generator dbml {
-  provider = "prisma-dbml-generator"
-}
+// generator dbml {
+//   provider = "prisma-dbml-generator"
+// }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-// Define the "Session" model
 model Session {
   sid    String   @id @db.VarChar(255)
-  sess   Json     @db.Json
   expire DateTime @db.Timestamp(6)
+  sess   Json     @db.Json
 }
-
-// user.model.prisma
 
 model User {
+  email     String   @unique
   id        String   @id @default(nanoid())
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  username  String?  @unique
-  imageUrl  String?
-  email     String   @unique
   password  String
   type      Type
-
-  tokens Token[]
+  updatedAt DateTime @updatedAt
+  username  String?  @unique
+  imageUrl  String?
+  tokens    Token[]
 }
-
-enum Type {
-  ADMIN
-  TEACHER
-  STUDENT
-}
-
-// admin.model.prisma
 
 model Admin {
-  id        String   @id @default(nanoid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  username  String?  @unique
-  imageUrl  String?
-  email     String   @unique
+  createdAt DateTime  @default(now())
+  email     String    @unique
+  id        String    @id @default(nanoid())
+  role      String    @default("viewer")
+  updatedAt DateTime  @updatedAt
+  username  String?   @unique
+  verified  Boolean   @default(false)
   password  String
-  role      String   @default("viewer")
-  verified  Boolean  @default(false)
-  // Add other admin details as needed
-
-  // Relationship with Teacher
-  teachers Teacher[]
+  imageUrl  String?
+  teachers  Teacher[]
 }
-
-// teacher.model.prisma
 
 model Teacher {
-  id        String   @id @default(nanoid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  username  String?  @unique
-  imageUrl  String?
-  firstName String?
-  lastName  String?
-  bio       String?
-  email     String   @unique
-  password  String
-  verified  Boolean  @default(false)
-
-  verifiedTeacher Boolean @default(false)
-  // Add other teacher details as needed
-
-  // Relationship with Admin
-  adminId String?
-  admin   Admin?  @relation(fields: [adminId], references: [id])
-
-  // Relationship with Course
-  courses Course[]
+  firstName       String?
+  lastName        String?
+  verified        Boolean  @default(false)
+  adminId         String?
+  createdAt       DateTime @default(now())
+  email           String   @unique
+  id              String   @id @default(nanoid())
+  updatedAt       DateTime @updatedAt
+  username        String?  @unique
+  verifiedTeacher Boolean  @default(false)
+  password        String
+  imageUrl        String?
+  bio             String?
+  courses         Course[]
+  admin           Admin?   @relation(fields: [adminId], references: [id])
 }
 
-// student.model.prisma
-
 model Student {
-  id        String   @id @default(nanoid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  username  String?  @unique
-  imageUrl  String?
-  firstName String?
-  lastName  String?
-  email     String   @unique
-  password  String
-  verified  Boolean  @default(false)
-  // Add other student details as needed
-
-  // Relationship with Course
-  enrolledCourses Course[]
-
-  progress StudentProgress[]
-  Chapter  Chapter[]
+  firstName       String?
+  lastName        String?
+  createdAt       DateTime          @default(now())
+  email           String            @unique
+  id              String            @id @default(nanoid())
+  updatedAt       DateTime          @updatedAt
+  username        String?           @unique
+  password        String
+  imageUrl        String?
+  verified        Boolean           @default(false)
+  Chapter         Chapter[]
+  progress        StudentProgress[]
+  enrolledCourses Course[]          @relation("CourseToStudent")
 }
 
 model Token {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  emailToken String? @unique
-
+  id         Int      @id @default(autoincrement())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  emailToken String?  @unique
   valid      Boolean  @default(true)
   expiration DateTime
-
-  userId String?
-  user   User?   @relation(fields: [userId], references: [id])
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
 }
 
-// course.model.prisma
-
 model Course {
-  id          String   @id @default(nanoid())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  title       String
-  description String?
-  banner      String?
-  type        String // e.g., Beginner, Intermediate, Advanced
-  limit       Int // Max number of participants allowed in the course
-  view        String   @default("basic") // Added field for course view
-  price       Int
-  // Add other course details as needed
-  isPublished Boolean  @default(false)
-
-  isFeatured Boolean @default(false)
-  // Relationship with Teacher
-  teacherId  String
-  teacher    Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-
+  id           String    @id @default(nanoid())
+  title        String
+  type         String
+  limit        Int
+  view         String    @default("basic")
+  teacherId    String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  banner       String?
+  price        Int
   categoryName String?
+  isFeatured   Boolean   @default(false)
+  isPublished  Boolean   @default(false)
+  description  String?
+  chapters     Chapter[]
   category     Category? @relation(fields: [categoryName], references: [name])
-
-  chapters Chapter[]
-
-  // Relationship with Student
-  participants Student[]
+  teacher      Teacher   @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  participants Student[] @relation("CourseToStudent")
 }
 
 model Category {
@@ -159,40 +115,40 @@ model Category {
 }
 
 model Chapter {
-  id          String  @id @default(uuid())
-  title       String
-  description Json?
-  videoUrl    String?
-  position    Int
-  isPublished Boolean @default(false)
-  isFree      Boolean @default(false)
-
-  courseId String
-  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
-
+  id              String            @id @default(uuid())
+  title           String
+  videoUrl        String?
+  position        Int
+  isPublished     Boolean           @default(false)
+  isFree          Boolean           @default(false)
+  courseId        String
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  studentId       String?
+  description     Json?
+  course          Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  Student         Student?          @relation(fields: [studentId], references: [id])
   studentProgress StudentProgress[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  Student   Student? @relation(fields: [studentId], references: [id])
-  studentId String?
 
   @@index([courseId])
 }
 
 model StudentProgress {
-  id        String @id @default(uuid())
-  studentId String
-
-  chapterId String
-  chapter   Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
-
-  isCompleted Boolean @default(false)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  Student   Student  @relation(fields: [studentId], references: [id])
+  id          String   @id @default(uuid())
+  studentId   String
+  chapterId   String
+  isCompleted Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  chapter     Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  Student     Student  @relation(fields: [studentId], references: [id])
 
   @@unique([studentId, chapterId])
   @@index([chapterId])
+}
+
+enum Type {
+  ADMIN
+  TEACHER
+  STUDENT
 }

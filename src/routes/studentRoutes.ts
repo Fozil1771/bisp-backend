@@ -5,6 +5,7 @@ import { enrollToCourse, unEnrollFromCourse, enrolledCourses } from '../controll
 import jwt, { sign } from 'jsonwebtoken';
 import bcrypt from 'bcrypt'
 import { PrismaClient } from '@prisma/client';
+const stripe = require("stripe")(process.env.STRIPE_PRIVATE_KEY)
 
 const prisma = new PrismaClient();
 
@@ -100,5 +101,34 @@ router.post('/logout', (req, res) => {
     }
   });
 });
+
+
+router.post("/:studentId/create-checkout-session", async (req, res) => {
+  console.log(req.body.item)
+  const item = req.body.item;
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      mode: "payment",
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: item.title,
+            },
+            unit_amount: item.price,
+          },
+        }
+      ],
+      success_url: `/`,
+      cancel_url: `/`,
+    })
+
+    res.json({ url: session.url })
+  } catch (error) {
+    res.status(500).json({ error: error })
+  }
+})
 
 export default router;

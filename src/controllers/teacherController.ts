@@ -27,7 +27,12 @@ const getTeacherById = async (req: Request, res: Response) => {
 // get all
 const getTeachers = async (req: Request, res: Response) => {
   try {
-    const teachers = await prisma.teacher.findMany();
+    const teachers = await prisma.teacher.findMany({
+      include: {
+        admin: true,
+        courses: true
+      }
+    });
     res.status(200).json(teachers);
   } catch (error) {
     console.error('Error fetching teachers:', error);
@@ -139,7 +144,7 @@ const updateTeacher = async (req: Request, res: Response) => {
     })
 
     res.status(200).json({ message: 'Teacher updated successfully', teacher: updatedTeacher });
-  }catch(error) {
+  } catch (error) {
     console.error('Error creating teacher:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
