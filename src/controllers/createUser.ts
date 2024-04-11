@@ -14,7 +14,7 @@ const expiration = new Date(
 const createUser = async (userData: any, userType: any) => {
   const { username, firstName, lastName, email, password } = userData;
   const hashedPassword = await bcrypt.hash(password, 10);
-  
+
   const checkUserInDb = await prisma.user.findFirst({
     where: {
       OR: [
@@ -28,7 +28,9 @@ const createUser = async (userData: any, userType: any) => {
     }
   })
 
-  if(checkUserInDb) {
+  console.log(checkUserInDb)
+
+  if (checkUserInDb) {
     return {
       error: 'User already exists'
     };
@@ -91,7 +93,7 @@ const createUser = async (userData: any, userType: any) => {
     }
   })
 
-  
+
   emailVerification(user, token);
 
 }

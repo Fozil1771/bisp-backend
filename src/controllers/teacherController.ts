@@ -14,8 +14,8 @@ const getTeacherById = async (req: Request, res: Response) => {
         id: id
       },
       include: {
-        admin: true
-      }
+        admin: true,
+      },
     });
 
     res.json(teacher);
@@ -126,20 +126,22 @@ const getAllCourses = async (req: Request, res: Response) => {
 
 const updateTeacher = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { username, firstName, lastName, bio } = req.body;
+  const { username, firstName, lastName, bio, imageUrl, password } = req.body;
 
   try {
-    // const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const updatedTeacher = await prisma.teacher.update({
       where: {
         id: id
       },
       data: {
-        username,
-        firstName,
-        lastName,
-        bio
+        username: username,
+        firstName: firstName,
+        lastName: lastName,
+        bio: bio,
+        imageUrl: imageUrl,
+        password: hashedPassword
       }
     })
 
@@ -193,8 +195,8 @@ const verifyTeacher = async (req: Request, res: Response) => {
     data: { valid: false }
   })
 
-  res.status(200).json({ message: 'Verification successful' });
-  res.redirect('/login')
+  res.redirect('http://localhost:5173/login')
+  // res.redirect('http://localhost:5173/login-confirmed')
   console.log(teacher)
 }
 

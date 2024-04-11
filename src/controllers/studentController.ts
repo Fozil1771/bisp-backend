@@ -29,6 +29,33 @@ const deleteById = async (req: Request, res: Response) => {
   }
 };
 
+const updateStudent = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { username, firstName, lastName, imageUrl, password } = req.body;
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const updatedStudent = await prisma.student.update({
+      where: {
+        id: id
+      },
+      data: {
+        username: username,
+        firstName: firstName,
+        lastName: lastName,
+        imageUrl: imageUrl,
+        password: hashedPassword
+      }
+    })
+
+    res.status(200).json({ message: 'Student updated successfully', student: updatedStudent });
+  } catch (error) {
+    console.error('Error creating student:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 const verifyStudent = async (req: Request, res: Response) => {
   const userId = req.params.userId;
   const tokenId = req.params.tokenId;
@@ -70,7 +97,8 @@ const verifyStudent = async (req: Request, res: Response) => {
     data: { valid: false }
   })
 
-  res.status(200).json({ message: 'Verification successful' });
+  // res.status(200).json({ message: 'Verification successful' });
+  res.redirect('http://localhost:5173/login')
   console.log(student)
 }
 
@@ -78,5 +106,6 @@ const verifyStudent = async (req: Request, res: Response) => {
 export {
   getStudents,
   deleteById,
-  verifyStudent
+  verifyStudent,
+  updateStudent
 }

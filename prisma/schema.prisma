@@ -2,10 +2,6 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// generator dbml {
-//   provider = "prisma-dbml-generator"
-// }
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -72,6 +68,7 @@ model Student {
   imageUrl        String?
   verified        Boolean           @default(false)
   Chapter         Chapter[]
+  rating          Rating[]
   progress        StudentProgress[]
   enrolledCourses Course[]          @relation("CourseToStudent")
 }
@@ -105,7 +102,18 @@ model Course {
   chapters     Chapter[]
   category     Category? @relation(fields: [categoryName], references: [name])
   teacher      Teacher   @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  ratings      Rating[]
   participants Student[] @relation("CourseToStudent")
+}
+
+model Rating {
+  id        String  @id @default(uuid())
+  rating    Int?
+  content   String
+  studentId String
+  courseId  String?
+  Course    Course? @relation(fields: [courseId], references: [id])
+  reviewer  Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 }
 
 model Category {

@@ -1,17 +1,54 @@
 import express, { Request, Response, NextFunction } from 'express';
-
-import { getTeachers, deleteTeacherById, updateTeacher, getTeacherById, getEnrolledParticipants, getAllCourses, verifyTeacher } from '../controllers/teacherController';
-
+import fs from 'fs/promises'
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken } from '../auth';
 import jwt, { sign } from 'jsonwebtoken';
 import bcrypt from 'bcrypt'
+import path from 'path';
+
 import { createUser } from '../controllers/createUser';
+import { getTeachers, deleteTeacherById, updateTeacher, getTeacherById, getEnrolledParticipants, getAllCourses, verifyTeacher } from '../controllers/teacherController';
+import multer from 'multer';
+
 
 const JWT_SECRET = "eyJhbGciOiJIUzI1NiJ9.eyJSb2xlIjoiQWRtaW4iLCJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkphdmFJblVzZSIsImV4cCI6MTcwMjg1ODcyNSwiaWF0IjoxNzAyODU4NzI1fQ.vCVu2XCpeE_vhtBCn1ryV2SU8ediTWbmuti7FWv6uVE" //process.env.JWT_SECRET;
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, './public/profile')
+  },
+  filename: function (req, file, cb) {
+    cb(null, `${Date.now()}_${file.originalname}`)
+  }
+})
+
+const uploadsDir = path.resolve('./public/profile')
+const renameFileWithUniqueTitle = async (req: any, res: any, next: NextFunction) => {
+  try {
+    const oldPath = path.join(uploadsDir, req?.file?.filename);
+    const uniqueTitle = req?.body?.username;
+    console.log(uniqueTitle)
+    const newPath = path.join(uploadsDir, `${uniqueTitle.split(" ").join("_")
+      }_avatar.jpg`);
+
+    // Use fs.promises to rename the file asynchronously
+    await fs.rename(oldPath, newPath);
+
+    // Update req.file.filename to reflect the new name for further processing
+    req.file.filename = `${uniqueTitle.split(" ").join("_")}_avatar.jpg`;
+    next();
+  } catch (error) {
+    console.error('Error renaming file:', error);
+    return res.status(500).send("Error renaming file");
+  }
+};
+
+const upload = multer({ storage, limits: { fileSize: 1576954 } }).single('imageUrl');
+
 
 router.get('/:id', getTeacherById);
 router.get('/', getTeachers);
@@ -34,8 +71,12 @@ router.delete('/:id', deleteTeacherById);
 
 router.get('/verify/:userId/:tokenId', verifyTeacher);
 
-router.put('/update/:id', updateTeacher);
+router.post('/update/:id', updateTeacher);
 
+router.post('/image', upload, renameFileWithUniqueTitle, (req: Request, res: Response) => {
+  console.log(req.body)
+  res.send("File uploaded")
+});
 
 
 // Generate a random 8 digit number as the email token

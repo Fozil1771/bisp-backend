@@ -43,6 +43,12 @@ const createCourse = async (req: Request, res: Response) => {
   }
 }
 
+const uploadCourseImage = async (req: Request, res: Response) => {
+
+  console.log(req.body)
+  console.log(req.file)
+}
+
 const updateCourse = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { title, banner, type, limit, view, price, teacherId } = req.body;
@@ -89,6 +95,12 @@ const getCoursePublicById = async (req: Request, res: Response) => {
             id: true,
             username: true
           }
+        },
+        ratings: {
+          include: {
+            Course: true,
+            reviewer: true
+          }
         }
       }
     });
@@ -101,7 +113,6 @@ const getCoursePublicById = async (req: Request, res: Response) => {
 
 const getCourseById = async (req: Request, res: Response) => {
   const { teacherId, id } = req.params;
-  console.log(id)
   try {
     const course = await prisma.course.findUniqueOrThrow({
       where: {
@@ -110,7 +121,8 @@ const getCourseById = async (req: Request, res: Response) => {
       },
       include: {
         chapters: true,
-        participants: true
+        participants: true,
+        ratings: true
       }
     });
     console.log("by id protected: ", course)
@@ -135,6 +147,55 @@ const deleteCourseById = async (req: Request, res: Response) => {
 }
 
 
+// ratings
+
+const getCourseRatings = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  // try {
+  //   const course = await prisma.course.findUniqueOrThrow({
+  //     where: {
+  //       id: id
+  //     },
+  //     include: {
+  //       ratings: true
+  //     }
+  //   });
+  // }
+}
+
+const createCourseRating = async (req: Request, res: Response) => {
+  const { studentId, courseId } = req.params;
+  const { rating, content } = req.body;
+
+  try {
+
+    const newRating = await prisma.rating.create({
+      data: {
+        studentId,
+        courseId,
+        rating,
+        content
+      }
+    });
+
+    res.status(201).json(newRating);
+
+  } catch (error) {
+    console.error('Error creating rating:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+
+
+}
+
+const deleteCourseRating = async (req: Request, res: Response) => {
+  const { id } = req.params;
+}
+
+const editCourseRating = async (req: Request, res: Response) => {
+
+}
 
 export {
   getCourseList,
@@ -142,5 +203,9 @@ export {
   createCourse,
   updateCourse,
   getCourseById,
-  deleteCourseById
+  deleteCourseById,
+  getCourseRatings,
+  createCourseRating,
+  deleteCourseRating,
+  editCourseRating
 }

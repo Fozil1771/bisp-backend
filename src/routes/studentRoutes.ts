@@ -1,15 +1,53 @@
 import express, { Request, Response, NextFunction } from 'express';
-import { getStudents, deleteById, verifyStudent } from '../controllers/studentController';
+import { getStudents, deleteById, verifyStudent, updateStudent } from '../controllers/studentController';
 import { createUser } from '../controllers/createUser';
 import { enrollToCourse, unEnrollFromCourse, enrolledCourses } from '../controllers/courseController/enroll';
 import jwt, { sign } from 'jsonwebtoken';
 import bcrypt from 'bcrypt'
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs/promises'
+
 import { PrismaClient } from '@prisma/client';
 const stripe = require("stripe")(process.env.STRIPE_PRIVATE_KEY)
 
 const prisma = new PrismaClient();
 
 const router = express.Router();
+
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, './public/profile')
+  },
+  filename: function (req, file, cb) {
+    cb(null, `${Date.now()}_${file.originalname}`)
+  }
+})
+
+const uploadsDir = path.resolve('./public/profile')
+const renameFileWithUniqueTitle = async (req: any, res: any, next: NextFunction) => {
+  try {
+    const oldPath = path.join(uploadsDir, req?.file?.filename);
+    const uniqueTitle = req?.body?.username;
+    console.log(uniqueTitle)
+    const newPath = path.join(uploadsDir, `${uniqueTitle.split(" ").join("_")
+      }_avatar.jpg`);
+
+    // Use fs.promises to rename the file asynchronously
+    await fs.rename(oldPath, newPath);
+
+    // Update req.file.filename to reflect the new name for further processing
+    req.file.filename = `${uniqueTitle.split(" ").join("_")}_avatar.jpg`;
+    next();
+  } catch (error) {
+    console.error('Error renaming file:', error);
+    return res.status(500).send("Error renaming file");
+  }
+};
+
+const upload = multer({ storage, limits: { fileSize: 1576954 } }).single('imageUrl');
+
 
 router.post('/', async (req, res) => {
   try {
@@ -26,11 +64,18 @@ router.get('/', getStudents);
 
 router.delete('/:id', deleteById)
 
-router.post('/verify/:userId/:tokenId', verifyStudent);
+router.get('/verify/:userId/:tokenId', verifyStudent);
 
 router.get('/:studentId/enrolled-courses', enrolledCourses);
 router.post('/:studentId/enroll/:courseId', enrollToCourse);
 router.post('/:studentId/unenroll/:courseId', unEnrollFromCourse);
+
+router.post('/update/:id', updateStudent);
+
+router.post('/image', upload, renameFileWithUniqueTitle, (req: Request, res: Response) => {
+  console.log(req.body)
+  res.send("File uploaded")
+});
 
 interface RequestWitSession extends Request {
   session: any;

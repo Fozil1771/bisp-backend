@@ -122,7 +122,8 @@ const verifyAdmin = async (req: Request, res: Response) => {
     data: { valid: false }
   })
 
-  res.status(200).json({ message: 'Verification successful' });
+  // res.status(200).json({ message: 'Verification successful' });
+  res.redirect('http://localhost:5173/login')
   // res.redirect('/home')
   console.log(admin)
 }

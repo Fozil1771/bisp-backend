@@ -39,6 +39,8 @@ app.use(
 	})
 );
 
+app.use("/public", express.static('public'));
+
 var accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' })
 
 app.use(morgan(':remote-addr - :remote-user ":method :url HTTP/:http-version" :status :res[content-length] - :response-time ms ":referrer" ":user-agent"', { stream: accessLogStream }))

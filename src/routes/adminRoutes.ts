@@ -22,20 +22,20 @@ router.get('/:id', getAdminById);
 router.get('/', getAllAdmins);
 
 router.post('/', async (req, res) => {
- try {
-  const userType: string = "ADMIN"
-  const createdUser = await createUser(req.body, userType);
-  res.status(201).send(createdUser);
- } catch (error) {
-  console.error(error);
-  res.status(500).send('Internal server error');
- }
+  try {
+    const userType: string = "ADMIN"
+    const createdUser = await createUser(req.body, userType);
+    res.status(201).send(createdUser);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Internal server error');
+  }
 });
 
 router.delete('/:id', deleteById);
 
 
-router.post('/verify/:userId/:tokenId', verifyAdmin);
+router.get('/verify/:userId/:tokenId', verifyAdmin);
 
 router.post('/verify-teacher/:teacherId', verifiedTeacherByAdmin);
 
@@ -88,7 +88,7 @@ router.post('/login', async (req: RequestWitSession, res, next) => {
 
     if (passwordMatch) {
       // Passwords match, send user data
-      req.session.user = {user, token};
+      req.session.user = { user, token };
 
       res.setHeader(
         'Set-Cookie',
