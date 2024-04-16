@@ -71,7 +71,7 @@ router.delete('/:id', deleteTeacherById);
 
 router.get('/verify/:userId/:tokenId', verifyTeacher);
 
-router.post('/update/:id', updateTeacher);
+router.put('/update/:id', updateTeacher);
 
 router.post('/image', upload, renameFileWithUniqueTitle, (req: Request, res: Response) => {
   console.log(req.body)

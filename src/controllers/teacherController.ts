@@ -128,26 +128,39 @@ const updateTeacher = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { username, firstName, lastName, bio, imageUrl, password } = req.body;
 
+  // Create an object to hold the update data
+  let updateData = {
+    ...(username && { username }),
+    ...(firstName && { firstName }),
+    ...(lastName && { lastName }),
+    ...(bio && { bio }),
+    ...(imageUrl && { imageUrl }),
+  };
+
+  // Only hash the password and include it in the update if it's provided
+  if (password) {
+    try {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      updateData.password = hashedPassword;
+    } catch (error) {
+      console.error('Error hashing password:', error);
+      return res.status(500).json({ error: 'Internal server error while hashing password' });
+    }
+  }
+
+  // Ensure that there's something to update
+  if (Object.keys(updateData).length === 0) {
+    return res.status(400).json({ error: 'No valid fields provided for update' });
+  }
+
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     const updatedTeacher = await prisma.teacher.update({
-      where: {
-        id: id
-      },
-      data: {
-        username: username,
-        firstName: firstName,
-        lastName: lastName,
-        bio: bio,
-        imageUrl: imageUrl,
-        password: hashedPassword
-      }
-    })
-
+      where: { id },
+      data: updateData,
+    });
     res.status(200).json({ message: 'Teacher updated successfully', teacher: updatedTeacher });
   } catch (error) {
-    console.error('Error creating teacher:', error);
+    console.error('Error updating teacher:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 }
