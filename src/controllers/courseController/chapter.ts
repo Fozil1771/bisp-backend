@@ -8,7 +8,7 @@ const createChapter = async (req: Request, res: Response) => {
 
   const { courseId, teacherId } = req.params
 
-  const { title, description, isPublished, isFree } = req.body;
+  const { title, description, isPublished, isFree, html } = req.body;
 
   try {
 
@@ -41,7 +41,8 @@ const createChapter = async (req: Request, res: Response) => {
         position: newPosition,
         isPublished,
         isFree,
-        courseId
+        courseId,
+        html
       },
       include: {
         course: {
@@ -54,6 +55,45 @@ const createChapter = async (req: Request, res: Response) => {
     res.status(201).json(createdChapter);
   } catch (error) {
     console.error('Error creating chapter:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+const updateChapter = async (req: Request, res: Response) => {
+
+  const { courseId, teacherId, chapterId } = req.params
+
+  const { title, description, isPublished, isFree, html } = req.body;
+
+  try {
+
+    const courseOwner = await prisma.course.findUnique({
+      where: {
+        id: courseId,
+        teacherId: teacherId
+      },
+    });
+
+    if (!courseOwner) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+
+    const updatedChapter = await prisma.chapter.update({
+      where: {
+        id: chapterId,
+      },
+      data: {
+        title: title,
+        description: description,
+        isPublished: isPublished,
+        isFree: isFree,
+        html: html
+      }
+    });
+    res.status(200).json(updatedChapter);
+  }
+  catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }
 }
@@ -76,5 +116,6 @@ const deleteChapterById = async (req: Request, res: Response) => {
 
 export {
   createChapter,
+  updateChapter,
   deleteChapterById
 }

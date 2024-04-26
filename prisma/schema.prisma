@@ -134,6 +134,7 @@ model Chapter {
   updatedAt       DateTime          @updatedAt
   studentId       String?
   description     Json?
+  html            String?
   course          Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
   Student         Student?          @relation(fields: [studentId], references: [id])
   studentProgress StudentProgress[]

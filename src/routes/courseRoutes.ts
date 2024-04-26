@@ -3,7 +3,7 @@ import fs from 'fs/promises'
 import path from 'path'
 import { authenticateToken } from '../auth';
 import { createCourse, deleteCourseById, getCourseById, getCourseList, getCoursePublicById, updateCourse, getCourseRatings, createCourseRating, deleteCourseRating, editCourseRating } from '../controllers/courseController/course';
-import { createChapter, deleteChapterById } from '../controllers/courseController/chapter';
+import { createChapter, updateChapter, deleteChapterById } from '../controllers/courseController/chapter';
 import multer from 'multer';
 
 const router = express.Router();
@@ -50,8 +50,15 @@ router.post('/image', upload, renameFileWithUniqueTitle, (req: Request, res: Res
   res.send("File uploaded")
 });
 
+router.post('/course/uploadFile', upload, (req: Request, res: Response) => {
+  console.log(req.body)
+  res.send("File uploaded")
+});
+
 
 router.post('/:teacherId/:courseId', authenticateToken, createChapter);
+router.put('/:teacherId/:courseId/chapter/:chapterId', authenticateToken, updateChapter);
+
 router.post('/:courseId/:studentId/rating', createCourseRating);
 
 router.put('/:teacherId/update/:courseId', authenticateToken, updateCourse);
@@ -62,8 +69,8 @@ router.delete('/:teacherId/:courseId/chapter/:chapterId', authenticateToken, del
 router.get('/:courseId/ratings', getCourseRatings);
 router.post('/:courseId/:studentId/rating', createCourseRating);
 
-router.put('/:courseId/:studentId/rating/:id', deleteCourseRating);
-router.delete('/:courseId/:studentId/rating/:id', editCourseRating);
+router.put('/:courseId/:studentId/rating/:id', editCourseRating);
+router.delete('/:courseId/:studentId/rating/:id', deleteCourseRating);
 
 
 

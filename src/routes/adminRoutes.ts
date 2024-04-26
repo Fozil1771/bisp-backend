@@ -21,6 +21,7 @@ router.get('/:id', getAdminById);
 
 router.get('/', getAllAdmins);
 
+
 router.post('/', async (req, res) => {
   try {
     const userType: string = "ADMIN"

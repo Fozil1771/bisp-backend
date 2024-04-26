@@ -6,6 +6,7 @@ import cors from 'cors'
 import morgan from 'morgan';
 import path from 'path';
 import * as fs from 'fs';
+import bodyParser from 'body-parser';
 
 import adminRoutes from './routes/adminRoutes';
 import teacherRoutes from './routes/teacherRoutes';
@@ -17,6 +18,8 @@ import { AuthenticatedRequest } from './types';
 
 
 const app = express();
+
+app.use(express.urlencoded({ limit: '10mb', extended: true, parameterLimit: 500000 }));
 const PORT = process.env.PORT || 3003;
 
 const pgPool = new Pool({

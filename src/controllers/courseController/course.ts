@@ -5,7 +5,13 @@ const prisma = new PrismaClient();
 
 const getCourseList = async (req: Request, res: Response) => {
   try {
-    const courses = await prisma.course.findMany();
+    const courses = await prisma.course.findMany({
+      include: {
+        chapters: true,
+        teacher: true,
+        participants: true
+      }
+    });
     console.log(courses)
     res.status(200).json(courses);
   } catch (error) {
@@ -128,7 +134,7 @@ const getCourseById = async (req: Request, res: Response) => {
     console.log("by id protected: ", course)
     res.status(200).json(course);
   } catch (error) {
-    res.send(404).json({ error: "No data found" })
+    res.status(404).json({ error: "No data found" })
   }
 }
 

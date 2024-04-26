@@ -145,12 +145,13 @@ const verifiedTeacherByAdmin = async (req: Request, res: Response) => {
       data: { verifiedTeacher: isVerified, adminId: adminId },
     });
 
-    res.status(200).json({ message: 'Teacher verified successfully', teacher: updatedTeacher });
+    res.status(200).json({ message: 'Teacher verified status updated successfully', teacher: updatedTeacher });
   } catch (error) {
     console.error('Error verifying teacher:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 export {
   verifyAdmin,
