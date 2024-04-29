@@ -66,7 +66,8 @@ router.post('/login', async (req: RequestWitSession, res, next) => {
     let user = await prisma.admin.findUniqueOrThrow({
       where: {
         email
-      }
+      },
+
     })
 
     console.log(user)

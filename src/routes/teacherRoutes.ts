@@ -100,14 +100,16 @@ interface RequestWitSession extends Request {
 
 
 router.post('/login', async (req: RequestWitSession, res, next) => {
-  const { username, email, password } = req.body;
+  const { email, password } = req.body;
 
   try {
 
     let user = await prisma.teacher.findUniqueOrThrow({
       where: {
-        email,
-        username
+        email
+      },
+      include: {
+        courses: true,
       }
     })
 

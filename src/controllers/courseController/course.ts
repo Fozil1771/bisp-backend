@@ -7,7 +7,11 @@ const getCourseList = async (req: Request, res: Response) => {
   try {
     const courses = await prisma.course.findMany({
       include: {
-        chapters: true,
+        chapters: {
+          include: {
+            studentProgress: true
+          }
+        },
         teacher: true,
         participants: true
       }
@@ -126,7 +130,11 @@ const getCourseById = async (req: Request, res: Response) => {
         teacherId: teacherId
       },
       include: {
-        chapters: true,
+        chapters: {
+          include: {
+            studentProgress: true
+          }
+        },
         participants: true,
         ratings: true
       }

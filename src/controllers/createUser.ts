@@ -74,6 +74,8 @@ const createUser = async (userData: any, userType: any) => {
     case "STUDENT":
       await prisma.student.create({
         data: {
+          firstName,
+          lastName,
           id: user.id,
           username,
           email,

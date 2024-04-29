@@ -1,5 +1,5 @@
 import express, { Request, Response, NextFunction } from 'express';
-import { getStudents, deleteById, verifyStudent, updateStudent } from '../controllers/studentController';
+import { getStudents, getStudentById, deleteById, verifyStudent, updateStudent, trackCourseProgress, getChapterProgress } from '../controllers/studentController';
 import { createUser } from '../controllers/createUser';
 import { enrollToCourse, unEnrollFromCourse, enrolledCourses } from '../controllers/courseController/enroll';
 import jwt, { sign } from 'jsonwebtoken';
@@ -61,6 +61,7 @@ router.post('/', async (req, res) => {
 });
 
 router.get('/', getStudents);
+router.get('/:id', getStudentById);
 
 router.delete('/:id', deleteById)
 
@@ -69,8 +70,12 @@ router.get('/verify/:userId/:tokenId', verifyStudent);
 router.get('/:studentId/enrolled-courses', enrolledCourses);
 router.post('/:studentId/enroll/:courseId', enrollToCourse);
 router.post('/:studentId/unenroll/:courseId', unEnrollFromCourse);
+router.post('/:studentId/:chapterId/progress', trackCourseProgress)
+router.get('/:studentId/:chapterId/get-progress', getChapterProgress)
+
 
 router.post('/update/:id', updateStudent);
+
 
 router.post('/image', upload, renameFileWithUniqueTitle, (req: Request, res: Response) => {
   console.log(req.body)
@@ -82,18 +87,19 @@ interface RequestWitSession extends Request {
 }
 
 router.post('/login', async (req: RequestWitSession, res, next) => {
-  const { username, email, password } = req.body;
+  const { email, password } = req.body;
 
   try {
 
     let user = await prisma.student.findUniqueOrThrow({
       where: {
         email,
-        username
+      },
+      include: {
+        progress: true,
+        enrolledCourses: true,
       }
     })
-
-    console.log(user)
 
     if (!user) {
       // User not found

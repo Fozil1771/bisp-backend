@@ -161,3 +161,9 @@ enum Type {
   TEACHER
   STUDENT
 }
+
+model GlobalSettings {
+  id   String  @id @default(uuid())
+  logo String?
+  copy String?
+}
